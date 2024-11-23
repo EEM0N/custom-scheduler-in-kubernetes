@@ -246,7 +246,7 @@ I1123 12:36:45.614209       1 eventhandlers.go:218] "Update event for scheduled 
 I1123 12:36:48.944213       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
 vagrant@master-node:~/custom-scheduler-using-binpacking$
 ```
-
+### Install Metrics-Server
 ```bash
 vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 serviceaccount/metrics-server created
