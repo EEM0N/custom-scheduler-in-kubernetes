@@ -123,7 +123,7 @@ This YAML creates a pod that is managed by the custom scheduler. The pod runs an
 
 # Verification and Status Check
 
-After deploying the custom Kubernetes scheduler, use the following commands to verify the setup. Below are the actual command outputs to ensure the custom scheduler is running correctly and the cluster is operational.
+Below are the actual command outputs to ensure the custom scheduler is running correctly and the cluster is operational.
 
 ### Checking Node Status
 
@@ -139,4 +139,30 @@ worker-node03   Ready    <none>          4h44m   v1.29.11   192.168.56.13   <non
 vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl get pods -n kube-system -o wide | grep custom
 custom-k8s-scheduler-5dbf95d5ff-ftkfj   1/1     Running   0               114m    172.168.158.7    worker-node02   <none>           <none>
 custom-k8s-scheduler-5dbf95d5ff-x6bng   1/1     Running   0               114m    172.168.77.140   master-node     <none>           <none>
-vagrant@master-node:~/custom-scheduler-in-kubernetes$
+```
+```bash
+vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-ftkfj -n kube-system --tail=10
+I1123 10:41:29.532427       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 10:41:31.551516       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 10:41:33.566952       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 10:41:35.590801       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 10:41:37.608586       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 10:41:37.638248       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
+I1123 10:41:37.638471       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="247.092µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:60680" resp=200
+I1123 10:41:37.638280       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
+I1123 10:41:37.639152       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="879.312µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:60664" resp=200
+I1123 10:41:39.621784       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+```
+```bash
+vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-x6bng -n kube-system --tail=10
+I1123 10:42:02.617562       1 leaderelection.go:354] lock is held by custom-k8s-scheduler-5dbf95d5ff-ftkfj_9302f9e2-b335-4186-8e14-2441cd99dd87 and has not yet expired
+I1123 10:42:02.617728       1 leaderelection.go:255] failed to acquire lease kube-system/custom-k8s-scheduler
+I1123 10:42:04.665174       1 leaderelection.go:354] lock is held by custom-k8s-scheduler-5dbf95d5ff-ftkfj_9302f9e2-b335-4186-8e14-2441cd99dd87 and has not yet expired
+I1123 10:42:04.665235       1 leaderelection.go:255] failed to acquire lease kube-system/custom-k8s-scheduler
+I1123 10:42:07.878776       1 leaderelection.go:354] lock is held by custom-k8s-scheduler-5dbf95d5ff-ftkfj_9302f9e2-b335-4186-8e14-2441cd99dd87 and has not yet expired
+I1123 10:42:07.879050       1 leaderelection.go:255] failed to acquire lease kube-system/custom-k8s-scheduler
+I1123 10:42:08.805950       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
+I1123 10:42:08.806105       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="327.662µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:43968" resp=200
+I1123 10:42:08.806230       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
+I1123 10:42:08.806267       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="59.796µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:43972" resp=200
+```
