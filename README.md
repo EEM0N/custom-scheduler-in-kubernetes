@@ -46,3 +46,49 @@ The **ConfigMap** `custom-k8s-scheduler-config` holds the configuration for the 
 
 ### Usage
 This ConfigMap is applied to the `kube-system` namespace, where the custom scheduler will use it to manage pod scheduling operations based on the defined resource allocation strategy and leader election configuration.
+
+## Custom Kubernetes Scheduler Deployment
+
+The **Deployment** configuration for the custom Kubernetes scheduler ensures that the scheduler is deployed and managed as a Kubernetes pod with the necessary configurations. This Deployment runs the custom scheduler with specific settings and parameters.
+
+### Key Components
+
+1. **Metadata:**
+   - The `name` of the deployment is `custom-k8s-scheduler`, and it is deployed within the `kube-system` namespace. Labels are used to classify the scheduler under the `control-plane` tier and `scheduler` component.
+
+2. **Replicas:**
+   - The deployment defines **2 replicas** to ensure high availability. This means two instances of the custom scheduler are running simultaneously, providing fault tolerance and load balancing.
+
+3. **Affinity and Anti-Affinity:**
+   - **Node Affinity:** The scheduler avoids nodes that are labeled with `karpenter.sh/nodepool`, ensuring that the custom scheduler does not run on these nodes.
+   - **Pod Anti-Affinity:** Ensures that the custom scheduler pods are scheduled on different nodes to avoid multiple schedulers being scheduled on the same node.
+
+4. **Security Context:**
+   - The pod runs as a non-root user (`runAsNonRoot: true`) to enhance security.
+   - The security context also prevents privilege escalation and limits the privileges the container has (e.g., dropping all capabilities and disallowing running as root).
+
+5. **Service Account:**
+   - The scheduler uses the `custom-k8s-scheduler` service account to interact with the Kubernetes API.
+
+6. **Container Configuration:**
+   - The container runs the **kube-scheduler** binary, with flags to bind to all IP addresses (`--bind-address=0.0.0.0`), specify the configuration file (`--config`), and set the verbosity level to 5 (`--v=5`).
+   - The scheduler image used is `registry.k8s.io/kube-scheduler:v1.29.11`.
+   - **Probes:** 
+     - **Liveness Probe:** Ensures that the scheduler is running properly by checking the `/healthz` endpoint.
+     - **Readiness Probe:** Ensures that the scheduler is ready to receive traffic, also by checking the `/healthz` endpoint.
+   
+7. **Resources:**
+   - **Requests and Limits:** Defines CPU and memory resource requests and limits for the custom scheduler container:
+     - **CPU:** 500m
+     - **Memory:** 512Mi
+   - These values ensure that the scheduler container is allocated sufficient resources to operate correctly while preventing resource overuse.
+
+8. **Volume Mount:**
+   - The configuration file for the custom scheduler (`custom-k8s-scheduler-config.yaml`) is mounted as a volume under `/etc/kubernetes/custom-k8s-scheduler` using a **ConfigMap**. This allows the scheduler to use the custom configuration during its operation.
+
+9. **Host Network and PID:**
+   - The deployment does not use the host network or PID namespace (`hostNetwork: false`, `hostPID: false`), ensuring that the pod is isolated from the host network and processes.
+
+### Usage
+
+This Deployment creates and manages the custom Kubernetes scheduler with the required configuration, ensuring high availability, security, and correct operation of the scheduling process in the cluster.
