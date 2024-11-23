@@ -137,7 +137,7 @@ vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl get pods -n kube-s
 custom-k8s-scheduler-5dbf95d5ff-ftkfj   1/1     Running   0               114m    172.168.158.7    worker-node02   <none>           <none>
 custom-k8s-scheduler-5dbf95d5ff-x6bng   1/1     Running   0               114m    172.168.77.140   master-node     <none>           <none>
 ```
-### Active Scheduler Instance Logs
+### Active Scheduler Pod Logs
 ```bash
 vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-ftkfj -n kube-system --tail=10
 I1123 10:41:29.532427       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
@@ -151,7 +151,7 @@ I1123 10:41:37.638280       1 pathrecorder.go:241] kube-scheduler: "/healthz" sa
 I1123 10:41:37.639152       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="879.312µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:60664" resp=200
 I1123 10:41:39.621784       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
 ```
-### Standby Scheduler Instance Logs
+### Standby Scheduler Pod Logs
 ```bash
 vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-x6bng -n kube-system --tail=10
 I1123 10:42:02.617562       1 leaderelection.go:354] lock is held by custom-k8s-scheduler-5dbf95d5ff-ftkfj_9302f9e2-b335-4186-8e14-2441cd99dd87 and has not yet expired
@@ -164,4 +164,27 @@ I1123 10:42:08.805950       1 pathrecorder.go:241] kube-scheduler: "/healthz" sa
 I1123 10:42:08.806105       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="327.662µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:43968" resp=200
 I1123 10:42:08.806230       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
 I1123 10:42:08.806267       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="59.796µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:43972" resp=200
+```
+### Verifying Pod Scheduling by the Custom Scheduler
+```bash
+vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-ftkfj -n kube-system | grep sample
+I1123 08:45:50.712919       1 eventhandlers.go:197] "Add event for scheduled pod" pod="default/sample"   
+I1123 08:45:50.744803       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 08:45:51.616298       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 08:46:04.966900       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 08:47:51.913940       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 08:47:52.628342       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 08:47:52.856235       1 eventhandlers.go:244] "Delete event for scheduled pod" pod="default/sample"
+I1123 08:50:20.452157       1 eventhandlers.go:126] "Add event for unscheduled pod" pod="default/sample"
+I1123 08:50:20.452356       1 scheduling_queue.go:576] "Pod moved to an internal scheduling queue" pod="default/sample" event="PodAdd" queue="Active"       
+I1123 08:50:20.452388       1 schedule_one.go:85] "About to try and schedule pod" pod="default/sample"
+I1123 08:50:20.452399       1 schedule_one.go:98] "Attempting to schedule pod" pod="default/sample"
+I1123 08:50:20.453594       1 default_binder.go:53] "Attempting to bind pod to node" pod="default/sample" node="master-node"
+I1123 08:50:20.467985       1 eventhandlers.go:197] "Add event for scheduled pod" pod="default/sample"
+I1123 08:50:20.468050       1 eventhandlers.go:171] "Delete event for unscheduled pod" pod="default/sample"
+I1123 08:50:20.470374       1 cache.go:389] "Finished binding for pod, can be expired" podKey="6f944b74-2e9b-4456-b927-7b0fb927c978" pod="default/sample"   
+I1123 08:50:20.470503       1 schedule_one.go:302] "Successfully bound pod to node" pod="default/sample" node="master-node" evaluatedNodes=4 feasibleNodes=4
+I1123 08:50:20.492625       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 08:50:21.103669       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 08:50:37.066145       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
 ```
