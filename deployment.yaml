@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: scheduler
+    tier: control-plane
+  name: custom-k8s-scheduler
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      component: scheduler
+      tier: control-plane
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        component: scheduler
+        tier: control-plane
+        version: second
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: karpenter.sh/nodepool
+                operator: DoesNotExist
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                component: scheduler
+                tier: control-plane
+            topologyKey: kubernetes.io/hostname
+      serviceAccountName: custom-k8s-scheduler
+      containers:
+      - command:
+        - /usr/local/bin/kube-scheduler
+        - --bind-address=0.0.0.0
+        - --config=/etc/kubernetes/custom-k8s-scheduler/custom-k8s-scheduler-config.yaml
+        - --v=5
+        # image: public.ecr.aws/eks-distro/kubernetes/kube-scheduler:v1.29.6-eks-1-29-18@sha256:0a02e1074342b078cfb6f48ac6f57b7641072d605491975441edc37395765e63
+        image: registry.k8s.io/kube-scheduler:v1.29.11
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10259
+            scheme: HTTPS
+          initialDelaySeconds: 15
+        name: kube-second-scheduler
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10259
+            scheme: HTTPS
+        # resources:
+        #   requests:
+        #     cpu: '1'
+        #     memory: 1Gi
+        #   limits:
+        #     cpu: '1'
+        #     memory: 1Gi
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: false
+          privileged: false
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/kubernetes/custom-k8s-scheduler
+      hostNetwork: false
+      hostPID: false
+      volumes:
+        - name: config-volume
+          configMap:
+            name: custom-k8s-scheduler-config
