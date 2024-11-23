@@ -121,3 +121,22 @@ This **Pod** configuration demonstrates how to schedule a pod using the **custom
 
 This YAML creates a pod that is managed by the custom scheduler. The pod runs an Nginx container, and the custom scheduler is specifically assigned to this pod through the `schedulerName` field, which overrides the default scheduler for this pod.
 
+# Verification and Status Check
+
+After deploying the custom Kubernetes scheduler, use the following commands to verify the setup. Below are the actual command outputs to ensure the custom scheduler is running correctly and the cluster is operational.
+
+### Checking Node Status
+
+Run the following command to check the status of the nodes in the cluster:
+
+```bash
+vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl get nodes -o wide
+NAME            STATUS   ROLES           AGE     VERSION    INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION       CONTAINER-RUNTIME
+master-node     Ready    control-plane   4h48m   v1.29.11   192.168.56.10   <none>        Ubuntu 22.04.4 LTS   5.15.0-102-generic   containerd://1.7.23
+worker-node01   Ready    <none>          4h44m   v1.29.11   192.168.56.11   <none>        Ubuntu 22.04.4 LTS   5.15.0-102-generic   containerd://1.7.23
+worker-node02   Ready    <none>          4h44m   v1.29.11   192.168.56.12   <none>        Ubuntu 22.04.4 LTS   5.15.0-102-generic   containerd://1.7.23
+worker-node03   Ready    <none>          4h44m   v1.29.11   192.168.56.13   <none>        Ubuntu 22.04.4 LTS   5.15.0-102-generic   containerd://1.7.23
+vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl get pods -n kube-system -o wide | grep custom
+custom-k8s-scheduler-5dbf95d5ff-ftkfj   1/1     Running   0               114m    172.168.158.7    worker-node02   <none>           <none>
+custom-k8s-scheduler-5dbf95d5ff-x6bng   1/1     Running   0               114m    172.168.77.140   master-node     <none>           <none>
+vagrant@master-node:~/custom-scheduler-in-kubernetes$
