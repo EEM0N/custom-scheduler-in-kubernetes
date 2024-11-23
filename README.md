@@ -47,6 +47,39 @@ The **ConfigMap** `custom-k8s-scheduler-config` holds the configuration for the 
 ### Usage
 This ConfigMap is applied to the `kube-system` namespace, where the custom scheduler will use it to manage pod scheduling operations based on the defined resource allocation strategy and leader election configuration.
 
+# Custom Scheduler Configuration with **NodeResourcesFit** Plugin and **RequestedToCapacityRatio**
+
+This configuration defines a custom Kubernetes scheduler that uses the **NodeResourcesFit** plugin to make node selection decisions based on available resources, such as CPU and memory. The scheduler leverages the **RequestedToCapacityRatio** scoring strategy to optimize pod placement across nodes in the cluster, with a **bin-packing** behavior aimed at utilizing node resources as efficiently as possible.
+
+## Key Components
+
+### 1. **Scheduler Profile**
+- The configuration defines a **scheduler profile** for the custom scheduler. The profile specifies the behavior of the scheduler, including the use of the **NodeResourcesFit** plugin.
+- The **NodeResourcesFit** plugin is used to evaluate nodes based on resource utilization, prioritizing nodes with available resources that meet the requirements of the scheduled pod.
+  
+### 2. **Scoring Strategy: Bin-packing Behavior**
+- **RequestedToCapacityRatio** is used as the scoring strategy, which compares the resource requests (e.g., CPU and memory) to the total available capacity of the nodes.
+- The configuration assigns equal weight to two custom resources: `intel.com/foo` and `intel.com/bar`, each with a weight of 3. This allows for customized resource prioritization during scheduling.
+- The **scoring shape** defines how the scheduler scores nodes based on resource utilization:
+  - **Utilization = 0** results in a score of **0**.
+  - **Utilization = 100** results in a score of **10**.
+  
+This configuration is **bin-packing** in nature, meaning the scheduler will attempt to fill nodes to their available resource capacity efficiently, minimizing resource wastage. It places pods on nodes with available resources, packing the nodes as fully as possible to make optimal use of cluster resources.
+
+### 3. **Plugins Configuration**
+- The **NodeResourcesFit** plugin is enabled under the **score** section, with a weight of 1. This ensures that node selection is based on available resource capacity.
+- All other plugins are disabled to ensure that the custom scheduler uses only the **NodeResourcesFit** plugin for node scoring.
+
+### 4. **Leader Election**
+- The scheduler is configured with leader election enabled to ensure only one instance of the custom scheduler runs at a time. This is essential for avoiding conflicts and ensuring that only one scheduler controls pod placement.
+- The leader election is conducted within the `kube-system` namespace, where the custom scheduler is expected to be deployed.
+
+### 5. **Client Connection**
+- The scheduler is configured to handle burst requests and rate-limited queries per second (QPS) for communication with the Kubernetes API server. The burst is set to **200** and the QPS is set to **100** to balance load while interacting with the Kubernetes control plane.
+
+## Conclusion
+This custom Kubernetes scheduler configuration ensures that workloads are scheduled onto nodes based on available resources, optimizing the node selection process with custom scoring rules for CPU and memory. The **bin-packing** behavior ensures efficient utilization of node resources, packing nodes as fully as possible while maintaining a balance between the requested and available capacity. The leader election ensures smooth operations, and the scheduler configuration is fine-tuned to handle bursts in traffic efficiently.
+
 ## Custom Kubernetes Scheduler Deployment
 
 The **Deployment** configuration for the custom Kubernetes scheduler ensures that the scheduler is deployed and managed as a Kubernetes pod with the necessary configurations. This Deployment runs the custom scheduler with specific settings and parameters.
@@ -106,7 +139,7 @@ This **Pod** configuration demonstrates how to schedule a pod using the **custom
 
 This YAML creates a pod that is managed by the custom scheduler. The pod runs an Nginx container, and the custom scheduler is specifically assigned to this pod through the `schedulerName` field, which overrides the default scheduler for this pod.
 
-## Verification and Status Check 
+## Verification and Status Check using custom scheduler with **MostAllocated**
 
 Below are the actual command outputs to ensure the custom scheduler is running correctly and the cluster is operational.
 
@@ -172,4 +205,58 @@ I1123 08:50:20.470503       1 schedule_one.go:302] "Successfully bound pod to no
 I1123 08:50:20.492625       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
 I1123 08:50:21.103669       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
 I1123 08:50:37.066145       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+```
+
+## Verification and Status Check using custom scheduler with **Bin-packing**
+
+```bash
+vagrant@master-node:~/custom-scheduler-using-binpacking$ kubectl get pods -n kube-system -o wide | grep custom
+custom-k8s-scheduler-5dbf95d5ff-65r6f   1/1     Running   0               12m     172.168.191.69   worker-node03   <none>           <none>
+custom-k8s-scheduler-5dbf95d5ff-vc8p9   1/1     Running   0               12m     172.168.87.196   worker-node01   <none>           <none>
+vagrant@master-node:~/custom-scheduler-using-binpacking$ 
+```
+### Active Scheduler Pod Logs
+```bash
+vagrant@master-node:~/custom-scheduler-using-binpacking$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-vc8p9 -n kube-system --tail=10
+I1123 12:34:46.239403       1 reflector.go:800] k8s.io/client-go@v0.0.0/tools/cache/reflector.go:229: Watch close - *v1.ReplicationController total 9 items received        
+I1123 12:34:47.599325       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 12:34:48.297422       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
+I1123 12:34:48.298011       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="927.415µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:48042" resp=200 
+I1123 12:34:48.297458       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
+I1123 12:34:48.298587       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="1.143593ms" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:48038" resp=200
+I1123 12:34:49.618641       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 12:34:51.631210       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 12:34:53.644115       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+I1123 12:34:55.659392       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
+```
+### Standby Scheduler Pod Logs
+```bash
+vagrant@master-node:~/custom-scheduler-using-binpacking$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-65r6f -n kube-system --tail=10
+I1123 12:35:10.766705       1 leaderelection.go:354] lock is held by custom-k8s-scheduler-5dbf95d5ff-vc8p9_c62b4adc-e633-4dca-9167-203eab601aaa and has not yet expired    
+I1123 12:35:10.767034       1 leaderelection.go:255] failed to acquire lease kube-system/custom-k8s-scheduler
+I1123 12:35:13.521282       1 leaderelection.go:354] lock is held by custom-k8s-scheduler-5dbf95d5ff-vc8p9_c62b4adc-e633-4dca-9167-203eab601aaa and has not yet expired    
+I1123 12:35:13.521792       1 leaderelection.go:255] failed to acquire lease kube-system/custom-k8s-scheduler
+I1123 12:35:14.041876       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
+I1123 12:35:14.042414       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="558.253µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:34846" resp=200
+I1123 12:35:14.046520       1 pathrecorder.go:241] kube-scheduler: "/healthz" satisfied by exact match
+I1123 12:35:14.046738       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="111.151µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:34858" resp=200
+I1123 12:35:16.873056       1 leaderelection.go:354] lock is held by custom-k8s-scheduler-5dbf95d5ff-vc8p9_c62b4adc-e633-4dca-9167-203eab601aaa and has not yet expired    
+I1123 12:35:16.873250       1 leaderelection.go:255] failed to acquire lease kube-system/custom-k8s-scheduler
+```
+### Verifying Pod Scheduling by the Custom Scheduler
+```bash
+vagrant@master-node:~/custom-scheduler-using-binpacking$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-vc8p9 -n kube-system | grep sample 
+I1123 12:36:44.055667       1 eventhandlers.go:126] "Add event for unscheduled pod" pod="default/sample"
+I1123 12:36:44.056214       1 scheduling_queue.go:576] "Pod moved to an internal scheduling queue" pod="default/sample" event="PodAdd" queue="Active"       
+I1123 12:36:44.056439       1 schedule_one.go:85] "About to try and schedule pod" pod="default/sample"
+I1123 12:36:44.056480       1 schedule_one.go:98] "Attempting to schedule pod" pod="default/sample"
+I1123 12:36:44.061214       1 default_binder.go:53] "Attempting to bind pod to node" pod="default/sample" node="master-node"
+I1123 12:36:44.105684       1 eventhandlers.go:197] "Add event for scheduled pod" pod="default/sample"
+I1123 12:36:44.105502       1 eventhandlers.go:171] "Delete event for unscheduled pod" pod="default/sample"
+I1123 12:36:44.107745       1 cache.go:389] "Finished binding for pod, can be expired" podKey="9fe21ae7-b347-432b-86c1-50bd06b7e2bd" pod="default/sample"   
+I1123 12:36:44.108277       1 schedule_one.go:302] "Successfully bound pod to node" pod="default/sample" node="master-node" evaluatedNodes=4 feasibleNodes=3
+I1123 12:36:44.216945       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 12:36:45.614209       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+I1123 12:36:48.944213       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
+vagrant@master-node:~/custom-scheduler-using-binpacking$
 ```
