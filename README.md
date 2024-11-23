@@ -246,3 +246,48 @@ I1123 12:36:45.614209       1 eventhandlers.go:218] "Update event for scheduled 
 I1123 12:36:48.944213       1 eventhandlers.go:218] "Update event for scheduled pod" pod="default/sample"
 vagrant@master-node:~/custom-scheduler-using-binpacking$
 ```
+
+```bash
+vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+serviceaccount/metrics-server created
+clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
+clusterrole.rbac.authorization.k8s.io/system:metrics-server created
+rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
+clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
+clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
+service/metrics-server created
+deployment.apps/metrics-server created
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
+```
+### Steps to fix the issue:
+### Edit the Metrics-Server Deployment:
+
+### Run the following command to edit the metrics-server deployment:
+
+```bash
+kubectl -n kube-system edit deployment metrics-server
+```
+### Add the --kubelet-insecure-tls Flag:
+
+### In the deployment manifest, locate the containers section and find the metrics-server container. Under the args section, add --kubelet-insecure-tls like so:
+
+```bash
+spec:
+  containers:
+    - name: metrics-server
+      image: "k8s.gcr.io/metrics-server/metrics-server:v0.6.2"
+      args:
+        - --kubelet-insecure-tls
+        - --metric-resolution=15s
+```
+```bash
+vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl get pods -n kube-system | grep metrics-server
+metrics-server-7974b6bf8d-hxdmb         1/1     Running   0               38s
+vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl top nodes
+NAME            CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
+master-node     467m         11%    1476Mi          79%
+worker-node01   39m          1%     566Mi           66%
+worker-node02   94m          4%     537Mi           62%       
+worker-node03   57m          2%     558Mi           65%
+vagrant@master-node:~/custom-scheduler-in-kubernetes$
+```
