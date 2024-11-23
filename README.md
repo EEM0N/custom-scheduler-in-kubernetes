@@ -260,16 +260,11 @@ deployment.apps/metrics-server created
 apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
 ```
 ### Steps to fix the issue:
-### Edit the Metrics-Server Deployment:
-
-### Run the following command to edit the metrics-server deployment:
 
 ```bash
 kubectl -n kube-system edit deployment metrics-server
 ```
 ### Add the --kubelet-insecure-tls Flag:
-
-### In the deployment manifest, locate the containers section and find the metrics-server container. Under the args section, add --kubelet-insecure-tls like so:
 
 ```bash
 spec:
