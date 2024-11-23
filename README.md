@@ -137,6 +137,7 @@ vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl get pods -n kube-s
 custom-k8s-scheduler-5dbf95d5ff-ftkfj   1/1     Running   0               114m    172.168.158.7    worker-node02   <none>           <none>
 custom-k8s-scheduler-5dbf95d5ff-x6bng   1/1     Running   0               114m    172.168.77.140   master-node     <none>           <none>
 ```
+### Active Scheduler Instance Logs
 ```bash
 vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-ftkfj -n kube-system --tail=10
 I1123 10:41:29.532427       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
@@ -150,6 +151,7 @@ I1123 10:41:37.638280       1 pathrecorder.go:241] kube-scheduler: "/healthz" sa
 I1123 10:41:37.639152       1 httplog.go:132] "HTTP" verb="GET" URI="/healthz" latency="879.312µs" userAgent="kube-probe/1.29" audit-ID="" srcIP="10.0.2.15:60664" resp=200
 I1123 10:41:39.621784       1 leaderelection.go:281] successfully renewed lease kube-system/custom-k8s-scheduler
 ```
+### Standby Scheduler Instance Logs
 ```bash
 vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl logs custom-k8s-scheduler-5dbf95d5ff-x6bng -n kube-system --tail=10
 I1123 10:42:02.617562       1 leaderelection.go:354] lock is held by custom-k8s-scheduler-5dbf95d5ff-ftkfj_9302f9e2-b335-4186-8e14-2441cd99dd87 and has not yet expired
