@@ -24,7 +24,7 @@ This **ClusterRoleBinding** grants the **custom-k8s-scheduler** **ServiceAccount
 
 This **ClusterRoleBinding** binds the **custom-k8s-scheduler** **ServiceAccount** to the **system:volume-scheduler** role. This grants the custom scheduler the necessary permissions to handle volume-related scheduling operations, ensuring the scheduler can make decisions about where volumes should be bound within the cluster.
 
-## Custom Scheduler Configuration with **NodeResourcesFit** plugin
+## Custom Scheduler Configuration with **NodeResourcesFit** plugin with **MostAllocated**
 
 The **ConfigMap** `custom-k8s-scheduler-config` holds the configuration for the custom Kubernetes scheduler. This configuration defines the scheduler's behavior, including the resource allocation strategy and the leader election mechanism.
 
@@ -47,20 +47,14 @@ The **ConfigMap** `custom-k8s-scheduler-config` holds the configuration for the 
 ### Usage
 This ConfigMap is applied to the `kube-system` namespace, where the custom scheduler will use it to manage pod scheduling operations based on the defined resource allocation strategy and leader election configuration.
 
-## Custom Scheduler Configuration with **CustomCPUUtilizationScorer** plugin
+## Custom Scheduler Configuration with **NodeResourcesFit** plugin with **RequestedToCapacityRatio**
 
-1. **Plugin Configuration:**
-   - **CustomCPUUtilizationScorer Plugin:**
-     - A custom scoring plugin named `CustomCPUUtilizationScorer` is defined, with a CPU utilization threshold of `0.7` (70%). This means the scheduler will prefer nodes where CPU utilization is below 70%.
-     - The plugin is enabled with a `weight` of 1, meaning it will have a minimal impact on the scheduling decision.
+### Key Components
 
-2. **Plugins Section:**
-   - The `score` plugin section enables the custom CPU utilization scorer plugin and disables all other score plugins by setting `disabled: "*"`.
-   - The `multiPoint` plugin also enables the custom scorer, indicating that it will be used for multiple points of the scheduling process.
+1. **Scheduler Profile:**
+   - The configuration defines a **scheduler profile** where the **NodeResourcesFit** plugin is used to prioritize nodes based on available resources (CPU and memory). 
+   - The **scoringStrategy** is configured to give equal weight (1) to **cpu** and **memory**, and the scheduler prefers nodes with the **RequestedToCapacityRatio**.
 
-### Usage
-
-This configuration enables a custom scheduler with a plugin for CPU utilization scoring. It is useful for scenarios where you want to prioritize nodes with lower CPU utilization. The configuration also includes leader election for high availability and client connection settings to manage API request rates.
 
 ## Custom Kubernetes Scheduler Deployment
 
@@ -121,7 +115,7 @@ This **Pod** configuration demonstrates how to schedule a pod using the **custom
 
 This YAML creates a pod that is managed by the custom scheduler. The pod runs an Nginx container, and the custom scheduler is specifically assigned to this pod through the `schedulerName` field, which overrides the default scheduler for this pod.
 
-## Verification and Status Check
+## Verification and Status Check 
 
 Below are the actual command outputs to ensure the custom scheduler is running correctly and the cluster is operational.
 
