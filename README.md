@@ -92,3 +92,16 @@ The **Deployment** configuration for the custom Kubernetes scheduler ensures tha
 ### Usage
 
 This Deployment creates and manages the custom Kubernetes scheduler with the required configuration, ensuring high availability, security, and correct operation of the scheduling process in the cluster.
+
+## Sample Pod Using Custom Kubernetes Scheduler
+
+This **Pod** configuration demonstrates how to schedule a pod using the **custom Kubernetes scheduler**.
+
+### Key Components
+
+**Scheduler:**
+   - The `schedulerName` is set to `custom-k8s-scheduler`, meaning this pod will be scheduled by the custom scheduler rather than the default Kubernetes scheduler.
+
+### Usage
+
+This YAML creates a pod that is managed by the custom scheduler. The pod runs an Nginx container and is configured to restart automatically if it fails. The custom scheduler is specifically assigned to this pod through the `schedulerName` field, which overrides the default scheduler for this pod.
