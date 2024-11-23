@@ -14,3 +14,12 @@ The **ClusterRole** for the custom Kubernetes scheduler defines the permissions 
 
 The ClusterRole is designed to ensure the custom scheduler has the necessary privileges to perform its scheduling and management tasks.
 
+## ClusterRoleBinding
+
+### 1. **ClusterRoleBinding for custom-k8s-scheduler as kube-scheduler**
+
+This **ClusterRoleBinding** grants the **custom-k8s-scheduler** **ServiceAccount** the necessary permissions from the **custom-k8s-scheduler** ClusterRole. It allows the custom scheduler to interact with resources like nodes, pods, events, leases, and more, which is required for scheduling tasks and managing cluster resources effectively.
+
+### 2. **ClusterRoleBinding for custom-k8s-scheduler as volume-scheduler**
+
+This **ClusterRoleBinding** binds the **custom-k8s-scheduler** **ServiceAccount** to the **system:volume-scheduler** role. This grants the custom scheduler the necessary permissions to handle volume-related scheduling operations, ensuring the scheduler can make decisions about where volumes should be bound within the cluster.
