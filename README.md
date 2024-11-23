@@ -47,6 +47,21 @@ The **ConfigMap** `custom-k8s-scheduler-config` holds the configuration for the 
 ### Usage
 This ConfigMap is applied to the `kube-system` namespace, where the custom scheduler will use it to manage pod scheduling operations based on the defined resource allocation strategy and leader election configuration.
 
+## Custom Scheduler Configuration with **CustomCPUUtilizationScorer** plugin
+
+1. **Plugin Configuration:**
+   - **CustomCPUUtilizationScorer Plugin:**
+     - A custom scoring plugin named `CustomCPUUtilizationScorer` is defined, with a CPU utilization threshold of `0.7` (70%). This means the scheduler will prefer nodes where CPU utilization is below 70%.
+     - The plugin is enabled with a `weight` of 1, meaning it will have a minimal impact on the scheduling decision.
+
+2. **Plugins Section:**
+   - The `score` plugin section enables the custom CPU utilization scorer plugin and disables all other score plugins by setting `disabled: "*"`.
+   - The `multiPoint` plugin also enables the custom scorer, indicating that it will be used for multiple points of the scheduling process.
+
+### Usage
+
+This configuration enables a custom scheduler with a plugin for CPU utilization scoring. It is useful for scenarios where you want to prioritize nodes with lower CPU utilization. The configuration also includes leader election for high availability and client connection settings to manage API request rates.
+
 ## Custom Kubernetes Scheduler Deployment
 
 The **Deployment** configuration for the custom Kubernetes scheduler ensures that the scheduler is deployed and managed as a Kubernetes pod with the necessary configurations. This Deployment runs the custom scheduler with specific settings and parameters.
@@ -106,18 +121,3 @@ This **Pod** configuration demonstrates how to schedule a pod using the **custom
 
 This YAML creates a pod that is managed by the custom scheduler. The pod runs an Nginx container, and the custom scheduler is specifically assigned to this pod through the `schedulerName` field, which overrides the default scheduler for this pod.
 
-
-## Custom Scheduler Configuration with **CustomCPUUtilizationScorer** plugin
-
-1. **Plugin Configuration:**
-   - **CustomCPUUtilizationScorer Plugin:**
-     - A custom scoring plugin named `CustomCPUUtilizationScorer` is defined, with a CPU utilization threshold of `0.7` (70%). This means the scheduler will prefer nodes where CPU utilization is below 70%.
-     - The plugin is enabled with a `weight` of 1, meaning it will have a minimal impact on the scheduling decision.
-
-2. **Plugins Section:**
-   - The `score` plugin section enables the custom CPU utilization scorer plugin and disables all other score plugins by setting `disabled: "*"`.
-   - The `multiPoint` plugin also enables the custom scorer, indicating that it will be used for multiple points of the scheduling process.
-
-### Usage
-
-This configuration enables a custom scheduler with a plugin for CPU utilization scoring. It is useful for scenarios where you want to prioritize nodes with lower CPU utilization. The configuration also includes leader election for high availability and client connection settings to manage API request rates.
