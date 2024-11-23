@@ -121,7 +121,7 @@ This **Pod** configuration demonstrates how to schedule a pod using the **custom
 
 This YAML creates a pod that is managed by the custom scheduler. The pod runs an Nginx container, and the custom scheduler is specifically assigned to this pod through the `schedulerName` field, which overrides the default scheduler for this pod.
 
-# Verification and Status Check
+## Verification and Status Check
 
 Below are the actual command outputs to ensure the custom scheduler is running correctly and the cluster is operational.
 
