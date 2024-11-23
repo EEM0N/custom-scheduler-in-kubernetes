@@ -66,20 +66,6 @@ This configuration defines a custom Kubernetes scheduler that uses the **NodeRes
   
 This configuration is **bin-packing** in nature, meaning the scheduler will attempt to fill nodes to their available resource capacity efficiently, minimizing resource wastage. It places pods on nodes with available resources, packing the nodes as fully as possible to make optimal use of cluster resources.
 
-#### 3. **Plugins Configuration**
-- The **NodeResourcesFit** plugin is enabled under the **score** section, with a weight of 1. This ensures that node selection is based on available resource capacity.
-- All other plugins are disabled to ensure that the custom scheduler uses only the **NodeResourcesFit** plugin for node scoring.
-
-#### 4. **Leader Election**
-- The scheduler is configured with leader election enabled to ensure only one instance of the custom scheduler runs at a time. This is essential for avoiding conflicts and ensuring that only one scheduler controls pod placement.
-- The leader election is conducted within the `kube-system` namespace, where the custom scheduler is expected to be deployed.
-
-#### 5. **Client Connection**
-- The scheduler is configured to handle burst requests and rate-limited queries per second (QPS) for communication with the Kubernetes API server. The burst is set to **200** and the QPS is set to **100** to balance load while interacting with the Kubernetes control plane.
-
-### Conclusion
-This custom Kubernetes scheduler configuration ensures that workloads are scheduled onto nodes based on available resources, optimizing the node selection process with custom scoring rules for CPU and memory. The **bin-packing** behavior ensures efficient utilization of node resources, packing nodes as fully as possible while maintaining a balance between the requested and available capacity. The leader election ensures smooth operations, and the scheduler configuration is fine-tuned to handle bursts in traffic efficiently.
-
 ## Custom Kubernetes Scheduler Deployment
 
 The **Deployment** configuration for the custom Kubernetes scheduler ensures that the scheduler is deployed and managed as a Kubernetes pod with the necessary configurations. This Deployment runs the custom scheduler with specific settings and parameters.
