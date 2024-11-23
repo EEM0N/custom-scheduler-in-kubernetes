@@ -47,15 +47,6 @@ The **ConfigMap** `custom-k8s-scheduler-config` holds the configuration for the 
 ### Usage
 This ConfigMap is applied to the `kube-system` namespace, where the custom scheduler will use it to manage pod scheduling operations based on the defined resource allocation strategy and leader election configuration.
 
-## Custom Scheduler Configuration with **NodeResourcesFit** plugin with **RequestedToCapacityRatio**
-
-### Key Components
-
-1. **Scheduler Profile:**
-   - The configuration defines a **scheduler profile** where the **NodeResourcesFit** plugin is used to prioritize nodes based on available resources (CPU and memory). 
-   - The **scoringStrategy** is configured to give equal weight (1) to **cpu** and **memory**, and the scheduler prefers nodes with the **RequestedToCapacityRatio**.
-
-
 ## Custom Kubernetes Scheduler Deployment
 
 The **Deployment** configuration for the custom Kubernetes scheduler ensures that the scheduler is deployed and managed as a Kubernetes pod with the necessary configurations. This Deployment runs the custom scheduler with specific settings and parameters.
