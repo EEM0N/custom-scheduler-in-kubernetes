@@ -125,9 +125,6 @@ This YAML creates a pod that is managed by the custom scheduler. The pod runs an
 
 Below are the actual command outputs to ensure the custom scheduler is running correctly and the cluster is operational.
 
-### Checking Node Status
-
-Run the following command to check the status of the nodes in the cluster:
 
 ```bash
 vagrant@master-node:~/custom-scheduler-in-kubernetes$ kubectl get nodes -o wide
