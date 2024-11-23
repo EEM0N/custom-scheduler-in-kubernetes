@@ -24,7 +24,7 @@ This **ClusterRoleBinding** grants the **custom-k8s-scheduler** **ServiceAccount
 
 This **ClusterRoleBinding** binds the **custom-k8s-scheduler** **ServiceAccount** to the **system:volume-scheduler** role. This grants the custom scheduler the necessary permissions to handle volume-related scheduling operations, ensuring the scheduler can make decisions about where volumes should be bound within the cluster.
 
-## Custom Scheduler Configuration
+## Custom Scheduler Configuration with **NodeResourcesFit** plugin
 
 The **ConfigMap** `custom-k8s-scheduler-config` holds the configuration for the custom Kubernetes scheduler. This configuration defines the scheduler's behavior, including the resource allocation strategy and the leader election mechanism.
 
@@ -105,3 +105,19 @@ This **Pod** configuration demonstrates how to schedule a pod using the **custom
 ### Usage
 
 This YAML creates a pod that is managed by the custom scheduler. The pod runs an Nginx container, and the custom scheduler is specifically assigned to this pod through the `schedulerName` field, which overrides the default scheduler for this pod.
+
+
+## Custom Scheduler Configuration with **CustomCPUUtilizationScorer** plugin
+
+1. **Plugin Configuration:**
+   - **CustomCPUUtilizationScorer Plugin:**
+     - A custom scoring plugin named `CustomCPUUtilizationScorer` is defined, with a CPU utilization threshold of `0.7` (70%). This means the scheduler will prefer nodes where CPU utilization is below 70%.
+     - The plugin is enabled with a `weight` of 1, meaning it will have a minimal impact on the scheduling decision.
+
+2. **Plugins Section:**
+   - The `score` plugin section enables the custom CPU utilization scorer plugin and disables all other score plugins by setting `disabled: "*"`.
+   - The `multiPoint` plugin also enables the custom scorer, indicating that it will be used for multiple points of the scheduling process.
+
+### Usage
+
+This configuration enables a custom scheduler with a plugin for CPU utilization scoring. It is useful for scenarios where you want to prioritize nodes with lower CPU utilization. The configuration also includes leader election for high availability and client connection settings to manage API request rates.
